@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { FilterBar, type Filters } from './components/FilterBar'
 import { JobBoard } from './components/JobBoard'
 import { JobDetail } from './components/JobDetail'
+import { RubricModal } from './components/RubricModal'
 import { SEED_JOBS } from './data/jobs'
 import type { JobCard as JobCardType, CardStatus } from './types'
 import { readAllStatuses, useStorageVersion } from './lib/storage'
@@ -18,6 +19,7 @@ const INITIAL_FILTERS: Filters = {
 export function App() {
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS)
   const [openCard, setOpenCard] = useState<JobCardType | null>(null)
+  const [rubricOpen, setRubricOpen] = useState(false)
 
   // Re-render when localStorage changes (multi-tab + within-tab via key swap)
   const storageVersion = useStorageVersion()
@@ -36,7 +38,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <Header jobCount={allCards.length} lastScrapeIso={lastScrape} />
+      <Header jobCount={allCards.length} lastScrapeIso={lastScrape} onOpenRubric={() => setRubricOpen(true)} />
       <FilterBar
         filters={filters}
         onChange={setFilters}
@@ -47,6 +49,7 @@ export function App() {
         <JobBoard cards={filtered} onOpen={setOpenCard} />
       </main>
       <JobDetail card={openCard} onClose={() => setOpenCard(null)} />
+      <RubricModal open={rubricOpen} onClose={() => setRubricOpen(false)} />
 
       <footer className="border-t border-border bg-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 font-mono text-[11px] uppercase tracking-wider text-text-muted flex flex-wrap items-center justify-between gap-2">

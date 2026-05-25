@@ -182,14 +182,24 @@ Felix is leaning toward marine and immersive global placements. These sources sk
 
 Every Sunday ~7pm PT, Claude:
 
-1. **Pull from each source** in priority order: A (aggregators) → C (corps) → D (federal/state) → E (consulting) → F (water) → B (CoolWorks) → G (REUs, only if Felix is still REU-eligible) → H (manual social, lower priority).
+1. **Pull from each source** in priority order: A (aggregators) → C (corps) → D (federal/state) → E (consulting) → F (water) → I (marine/intl) → B (CoolWorks) → G (REUs, only if Felix is still REU-eligible) → H (manual social, lower priority).
 2. **Dedupe** against existing card IDs in `src/data/jobs.ts`. ID format: `{org-slug}-{role-slug}-{yymm}`.
-3. **Score** each candidate using the rubric above. Drop anything <55. Drop anything in industry-score-0 immediately.
-4. **Generate the card** following `src/types.ts` shape. For roles with a `contactEmail`, draft the email body using the template below.
-5. **Append to data file** (don't overwrite). Maintain newest-first sort by `source.discoveredAt`.
-6. **Update this file's "Last scrape" log** at the bottom.
+3. **VERIFY freshness** — for every candidate card, **fetch the `applyUrl`**. If it returns a non-200 status, redirects to a generic careers page, or the page shows "this job is no longer available" / "applications closed" → **DROP THE CARD**. Don't include it.
+4. **VERIFY deadline** — if a posting shows a deadline that has already passed, drop the card. If deadline is unspecified, treat as rolling but only keep cards where the source page was modified within the last 30 days.
+5. **Score** each candidate using the rubric above. Drop anything <55. Drop anything in industry-score-0 immediately. Always populate `fitBreakdown` with the per-component numbers — the UI shows the decomposition.
+6. **Generate the card** following `src/types.ts` shape. For roles with a `contactEmail`, draft the email body using the template below using Felix's actual experience from `src/data/profile.ts` (don't invent).
+7. **Append to data file** (don't overwrite existing cards Felix may still be acting on). Maintain newest-first sort by `source.discoveredAt`.
+8. **Sweep existing cards for staleness** — for any card already on the board whose deadline has passed in the last week, set `extras` to "**Deadline passed.** Track for next cycle." and lower its `fitScore` to reflect closed status. Don't delete (Felix may want to review what he missed).
+9. **Update this file's "Update log"** at the bottom with date, number added, number swept, sources that yielded zero.
 
 The actual execution lives in `scripts/scrape.md` — that file is what Claude opens during the weekly run.
+
+### URL verification rules (hard requirements)
+
+- **Every `applyUrl` must be fetched and confirmed 200** before the card is included. No exceptions.
+- If a URL returns a 200 but the page content shows "position filled," "applications closed," or "we are no longer accepting applications," **drop the card.**
+- If WebFetch is restricted from a domain, use WebSearch to confirm the listing appears in current results with a recent date. Note the verification method in the agent reply ("WebFetch-verified" vs "WebSearch-verified") so Terry knows the confidence level.
+- For postings on job boards (Conservation Job Board, USAJOBS, etc.), the URL must contain a posting ID — never link to a generic search page.
 
 ---
 
@@ -229,3 +239,4 @@ Personalization rules:
 |---|---|---|
 | 2026-05-25 | Initial scaffold + source list from research pass. Seed cards illustrative — first real scrape pending. | Claude + Terry [source: cowork/laptop] |
 | 2026-05-25 | Added marine + international section (I) with 9 sources after Terry flagged Bimini Shark Lab, OSU marine list, Save Our Seas, GVI. New `marine` + `international` industry tags. 5 new seed cards prepended. | Claude + Terry [source: cowork/laptop] |
+| 2026-05-25 | Stale-card sweep: Terry flagged that many seed cards had expired listings. Retired the original 15 illustrative cards and replaced with 10 verified-live postings (Cascades Carnivore, Yosemite NPS, CA Climate Action Corps, SCA Western, ACE-EPIC GRSM + Hot Springs, MSU Bozeman, SFPUC Watershed, GRSM NPS, Stillwater Sciences). Added hard URL-verification rules to scrape methodology. Added `fitBreakdown` to every card. | Claude + Terry [source: cowork/laptop] |

@@ -1,14 +1,15 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Leaf, GraduationCap, MapPin, ShieldCheck } from 'lucide-react'
+import { Leaf, GraduationCap, MapPin, ShieldCheck, Scale } from 'lucide-react'
 import { FELIX_PROFILE } from '../data/profile'
 
 interface Props {
   jobCount: number
   lastScrapeIso?: string
+  onOpenRubric: () => void
 }
 
-export function Header({ jobCount, lastScrapeIso }: Props) {
+export function Header({ jobCount, lastScrapeIso, onOpenRubric }: Props) {
   const lastScrape = lastScrapeIso
     ? new Date(lastScrapeIso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null
@@ -61,15 +62,24 @@ export function Header({ jobCount, lastScrapeIso }: Props) {
 
           {/* Stats line */}
           <div className="field-rule mb-4" />
-          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 font-mono text-[11px] uppercase tracking-wider text-text-muted">
-            <span>
-              <span className="font-display text-2xl text-text not-italic">{jobCount}</span>
-              {' '}roles on the board
-            </span>
-            {lastScrape && (
-              <span>Last scrape · {lastScrape}</span>
-            )}
-            <span>Next scrape · Sun evening</span>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 font-mono text-[11px] uppercase tracking-wider text-text-muted">
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+              <span>
+                <span className="font-display text-2xl text-text not-italic">{jobCount}</span>
+                {' '}roles on the board
+              </span>
+              {lastScrape && (
+                <span>Last scrape · {lastScrape}</span>
+              )}
+              <span>Next scrape · Sun evening</span>
+            </div>
+            <button
+              onClick={onOpenRubric}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-transparent text-text-muted hover:text-text border border-border hover:border-accent-strong rounded transition-colors min-h-[36px]"
+            >
+              <Scale size={12} strokeWidth={1.75} />
+              How scoring works
+            </button>
           </div>
         </motion.div>
       </div>

@@ -5,7 +5,7 @@ import type { JobCard as JobCardType } from '../types'
 import { FitScore } from './FitScore'
 import { StatusPill } from './StatusPill'
 import { ROLE_TYPE_LABELS, INDUSTRY_LABELS, deadlineMeta } from '../lib/format'
-import { useCardStatus } from '../lib/storage'
+import { useCardStatus, useCardOverride } from '../lib/storage'
 
 interface Props {
   card: JobCardType
@@ -15,7 +15,9 @@ interface Props {
 
 export function JobCard({ card, onOpen, index }: Props) {
   const [status] = useCardStatus(card.id, card.status)
+  const [override] = useCardOverride(card.id)
   const deadline = deadlineMeta(card.deadline)
+  const displayScore = override?.score ?? card.fitScore
 
   const deadlineColor =
     deadline.urgency === 'imminent' ? 'text-urgent' :
@@ -40,11 +42,18 @@ export function JobCard({ card, onOpen, index }: Props) {
       }}
       role="button"
       tabIndex={0}
-      aria-label={`${card.role} at ${card.org}, fit score ${card.fitScore}`}
+      aria-label={`${card.role} at ${card.org}, fit score ${displayScore}`}
     >
       {/* Top row — fit score + status */}
       <div className="flex items-start justify-between mb-3 gap-3">
-        <FitScore score={card.fitScore} />
+        <div className="flex items-center gap-2">
+          <FitScore score={displayScore} />
+          {override && (
+            <span className="font-mono text-[9px] uppercase tracking-wider text-accent-strong leading-none">
+              your<br/>score
+            </span>
+          )}
+        </div>
         <StatusPill status={status} />
       </div>
 

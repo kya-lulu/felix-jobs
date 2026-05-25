@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { CardStatus } from '../types'
+import type { CardStatus, FitOverride } from '../types'
 
 /**
- * Persistence layer — localStorage. Status + notes per card, also the
- * "dismissed" set so cards stay hidden once Felix passes on them.
+ * Persistence layer — localStorage. Status, notes, and score overrides
+ * per card.
  *
  * Keys:
- *   felix-jobs.status.{id} → CardStatus
- *   felix-jobs.notes.{id}  → string (markdown)
+ *   felix-jobs.status.{id}   → CardStatus
+ *   felix-jobs.notes.{id}    → string (markdown)
+ *   felix-jobs.override.{id} → JSON FitOverride
  */
 
 const STATUS_PREFIX = 'felix-jobs.status.'
 const NOTES_PREFIX = 'felix-jobs.notes.'
+const OVERRIDE_PREFIX = 'felix-jobs.override.'
 
 function safeGet(key: string): string | null {
   try {
@@ -61,6 +63,38 @@ export function useCardNotes(cardId: string): [string, (next: string) => void] {
   )
 
   return [notes, updateNotes]
+}
+
+export function useCardOverride(
+  cardId: string,
+): [FitOverride | null, (next: FitOverride | null) => void] {
+  const [override, setOverride] = useState<FitOverride | null>(() => {
+    const raw = safeGet(OVERRIDE_PREFIX + cardId)
+    if (!raw) return null
+    try {
+      return JSON.parse(raw) as FitOverride
+    } catch {
+      return null
+    }
+  })
+
+  const updateOverride = useCallback(
+    (next: FitOverride | null) => {
+      setOverride(next)
+      if (next === null) {
+        try {
+          localStorage.removeItem(OVERRIDE_PREFIX + cardId)
+        } catch {
+          // ignore
+        }
+      } else {
+        safeSet(OVERRIDE_PREFIX + cardId, JSON.stringify(next))
+      }
+    },
+    [cardId],
+  )
+
+  return [override, updateOverride]
 }
 
 /** Read all status keys at once — used to compute counts in the header */

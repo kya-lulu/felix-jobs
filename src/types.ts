@@ -42,6 +42,31 @@ export type CardStatus =
   | 'offer'         // received offer
   | 'passed'        // dismissed (with reason)
 
+/**
+ * Component-level scoring breakdown. Caps match AGENT.md's rubric.
+ * Sum should equal `fitScore` (with bonus capped at 15, total capped at 100).
+ */
+export interface FitBreakdown {
+  industry: number       // 0-25 · industry alignment
+  roleType: number       // 0-20 · type of engagement fit
+  accessibility: number  // 0-20 · realistic to get
+  pay: number            // 0-15 · pay honesty
+  application: number    // 0-10 · how to apply
+  urgency: number        // 0-10 · deadline timeliness
+  bonus: number          // 0-15 · known-good employer / housing / path-to-permanent
+}
+
+/**
+ * Felix's manual score override. When present, the UI shows BOTH the agent
+ * score and Felix's score side-by-side. Persisted to localStorage; the
+ * weekly scrape can read it (export endpoint not yet built) to recalibrate.
+ */
+export interface FitOverride {
+  score: number       // Felix's 0-100 score
+  reason: string      // why he overrode
+  timestamp: string   // ISO datetime
+}
+
 export type SourceChannel =
   | 'idealist'
   | 'conservation-job-board'
@@ -95,6 +120,12 @@ export interface JobCard {
 
   /** 0-100 fit score from the agent. See AGENT.md for rubric. */
   fitScore: number
+
+  /**
+   * Per-component score decomposition. Optional — older cards don't have it.
+   * Components sum to fitScore (cap 100). See AGENT.md "Scoring rubric".
+   */
+  fitBreakdown?: FitBreakdown
 
   /** One-sentence fit rationale — why the agent rated this score */
   fitRationale: string

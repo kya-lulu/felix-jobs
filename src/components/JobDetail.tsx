@@ -2,16 +2,19 @@ import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, MapPin, Calendar, DollarSign, ExternalLink, Mail, Copy, Check,
-  Sparkles, AlertCircle, ListChecks, Quote,
+  Sparkles, AlertCircle, ListChecks, Quote, MessageCircle, Scale,
 } from 'lucide-react'
 import type { JobCard as JobCardType, CardStatus } from '../types'
-import { useCardStatus, useCardNotes } from '../lib/storage'
+import { useCardStatus, useCardNotes, useCardOverride } from '../lib/storage'
 import { FitScore } from './FitScore'
 import { StatusPill } from './StatusPill'
+import { ScoreBreakdown } from './ScoreBreakdown'
+import { OverrideForm } from './OverrideForm'
 import {
   ROLE_TYPE_LABELS, INDUSTRY_LABELS, deadlineMeta,
 } from '../lib/format'
 import { gmailComposeUrl, copyEmailToClipboard, mailtoUrl } from '../lib/gmail'
+import { askClaudeUrl } from '../lib/claude'
 
 interface Props {
   card: JobCardType | null
@@ -42,6 +45,7 @@ export function JobDetail({ card, onClose }: Props) {
 function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => void }) {
   const [status, setStatus] = useCardStatus(card.id, card.status)
   const [notes, setNotes] = useCardNotes(card.id)
+  const [override, setOverride] = useCardOverride(card.id)
   const [copied, setCopied] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -104,6 +108,10 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
     })
   }
 
+  const handleAskClaude = () => {
+    window.open(askClaudeUrl(card), '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
@@ -145,7 +153,7 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
           {/* Header */}
           <header className="mb-6 pr-12">
             <div className="flex items-start gap-4 mb-4">
-              <FitScore score={card.fitScore} />
+              <FitScore score={override?.score ?? card.fitScore} />
               <div className="flex-1 min-w-0">
                 <p className="font-mono text-xs uppercase tracking-wider text-text-muted mb-1">
                   {card.org}
@@ -156,6 +164,11 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
                 >
                   {card.role}
                 </h2>
+                {override && (
+                  <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                    Your score · agent had it at {card.fitScore}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -200,11 +213,29 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
           {/* Fit rationale */}
           <section className="mb-8">
             <SectionHeading icon={<Sparkles size={14} strokeWidth={1.75} />}>
-              Why this fits Felix
+              Why the agent rated this
             </SectionHeading>
-            <p className="text-sm text-text leading-relaxed bg-accent/10 border-l-2 border-accent-strong pl-4 py-2">
+            <p className="text-sm text-text leading-relaxed bg-bg border-l-2 border-primary pl-4 py-2 mb-4">
               {card.fitRationale}
             </p>
+
+            {card.fitBreakdown && (
+              <div className="mb-4">
+                <ScoreBreakdown breakdown={card.fitBreakdown} total={card.fitScore} />
+              </div>
+            )}
+
+            <div>
+              <h4 className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted mb-2">
+                Your call
+              </h4>
+              <OverrideForm
+                override={override}
+                agentScore={card.fitScore}
+                onSave={setOverride}
+                onClear={() => setOverride(null)}
+              />
+            </div>
           </section>
 
           {/* Responsibilities */}
@@ -255,7 +286,7 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
           <section className="mb-8">
             <SectionHeading>Take action</SectionHeading>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
               {card.applyUrl && (
                 <button
                   onClick={handleApply}
@@ -265,6 +296,15 @@ function JobDetailInner({ card, onClose }: { card: JobCardType; onClose: () => v
                   Apply on site
                 </button>
               )}
+
+              <button
+                onClick={handleAskClaude}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-surface text-text border border-border rounded-md font-mono text-xs uppercase tracking-wider hover:border-accent-strong transition-colors min-h-[44px]"
+                title="Opens claude.ai in a new tab with this role pre-loaded as context"
+              >
+                <MessageCircle size={14} strokeWidth={2} />
+                Ask Claude about this
+              </button>
 
               {card.draftEmail && card.contactEmail && (
                 <>

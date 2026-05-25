@@ -21,7 +21,7 @@ cd "/Users/terrylin/Library/CloudStorage/GoogleDrive-terrylin921@gmail.com/My Dr
 git init
 git add .
 git commit -m "init: Field Notes v1 — Felix's environmental jobs board"
-gh repo create terrylin921/felix-jobs --public --source=. --push
+gh repo create kya-lulu/felix-jobs --public --source=. --push
 
 # 2. Deploy to Vercel
 vercel --prod
@@ -38,23 +38,27 @@ Vercel will return a URL like `https://felix-jobs-<hash>.vercel.app`. That's the
 
 ---
 
-## Custom domain (optional — when you want a memorable URL)
+## Custom domain — `felixlin.one`
 
-Suggested patterns (one of):
+Terry owns `felixlin.one`. Pick one of:
 
-| Domain | Style | Setup |
+| Option | URL | When to use |
 |---|---|---|
-| `felixjobs.club` | matches felixlin.club care-guide convention | Buy from registrar → DNS as below |
-| `jobs.felixlin.club` | subdomain of existing felixlin.club | CNAME `jobs` → `cname.vercel-dns.com` |
-| `fieldnotes.felixlin.club` | thematic | CNAME `fieldnotes` → `cname.vercel-dns.com` |
+| **Apex** (recommended) | `felixlin.one` | If this site IS Felix's primary online presence. Simplest URL, most memorable. |
+| **Subdomain** | `jobs.felixlin.one` | If the apex is reserved for a future portfolio/landing page. Keeps the job board clearly scoped. |
+| **Thematic subdomain** | `fieldnotes.felixlin.one` | Matches the in-app branding ("Field Notes"). Distinctive but harder to remember verbally. |
 
-DNS records:
-- **A record:** `@` → `76.76.21.21`
-- **CNAME:** `www` → `cname.vercel-dns.com`
+**Apex setup** (for `felixlin.one`):
+- At your registrar's DNS panel, add: **A record** `@` → `76.76.21.21`
+- And: **CNAME** `www` → `cname.vercel-dns.com` (so `www.felixlin.one` also works)
 
-Then in Vercel dashboard → Project `felix-jobs` → Settings → Domains → Add domain → enter `<your-domain>`.
+**Subdomain setup** (for `jobs.felixlin.one` or `fieldnotes.felixlin.one`):
+- Just one record: **CNAME** `jobs` (or `fieldnotes`) → `cname.vercel-dns.com`
+- Don't touch the apex `A` record if you want to keep the root open for something else later.
 
-Propagation: 5-30 minutes.
+Then in Vercel dashboard → Project `felix-jobs` → Settings → Domains → **Add** → type the full domain → Vercel verifies the DNS automatically.
+
+Propagation: 5–30 minutes. SSL cert provisions automatically once DNS resolves.
 
 ---
 
@@ -62,7 +66,7 @@ Propagation: 5-30 minutes.
 
 After the first manual deploy, enable in Vercel dashboard:
 
-`Project Settings → Git → Connect Git Repository → terrylin921/felix-jobs`
+`Project Settings → Git → Connect Git Repository → kya-lulu/felix-jobs`
 
 Once connected, every `git push` triggers a Vercel rebuild. The weekly Sunday scrape commits + pushes automatically, so the live site refreshes weekly without manual intervention.
 
@@ -77,7 +81,7 @@ The scheduled task (`felix-jobs-weekly-scrape`, fires Sun 7pm PT) runs the promp
 ## Picking up on another machine
 
 ```bash
-gh repo clone terrylin921/felix-jobs
+gh repo clone kya-lulu/felix-jobs
 cd felix-jobs
 npm install
 npm run dev     # local preview on http://localhost:5173
